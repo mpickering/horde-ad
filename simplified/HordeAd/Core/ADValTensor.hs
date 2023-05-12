@@ -14,6 +14,9 @@ module HordeAd.Core.ADValTensor
 
 
 import Prelude
+import GHC.Stack
+import GHC.TypeLits
+import Data.Proxy
 
 import qualified Data.Array.DynamicS as OT
 import qualified Data.Array.Ranked as ORB
@@ -71,7 +74,12 @@ instance ADModeAndNum d Double => Tensor (ADVal d Double) where
   treverse = reverse'
   ttranspose = transpose
   treshape = reshape
+  tbuild1 :: forall n . (HasCallStack, KnownNat n)  -- this form requires less type applications
+          => Int -> (IntOf (ADVal d Double) -> TensorOf n (ADVal d Double)) -> TensorOf (1 + n) (ADVal d Double)
   tbuild1 k f =
+
+    let ?callStack = pushCallStack (show (natVal (Proxy @n)), SrcLoc "" "" "" 0 0 0 0) callStack
+    in
     let g i = let D u _ = f i in u
         h i = let D _ u' = f i in u'
     in dD (tbuild1R k g) (dBuild1 k h)

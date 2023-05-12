@@ -82,7 +82,7 @@ common options
                       TypeFamilyDependencies, FunctionalDependencies,
                       RecordWildCards, MultiWayIf, LambdaCase,
                       DefaultSignatures, PatternSynonyms, NoStarIsType,
-                      DataKinds
+                      DataKinds, ImplicitParams
   other-extensions:   UnboxedTuples, CPP, ViewPatterns, OverloadedLists,
                       DerivingStrategies, DeriveAnyClass,
                       UndecidableInstances, AllowAmbiguousTypes

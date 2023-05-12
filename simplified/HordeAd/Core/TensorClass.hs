@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedLists, UndecidableInstances #-}
+{-# LANGUAGE OverloadedLists, UndecidableInstances, AllowAmbiguousTypes, ImplicitParams #-}
 {-# OPTIONS_GHC -fplugin GHC.TypeLits.KnownNat.Solver #-}
 {-# OPTIONS_GHC -fplugin GHC.TypeLits.Normalise #-}
 -- | Dual numbers and various operations on them, arithmetic and related
@@ -14,6 +14,7 @@ module HordeAd.Core.TensorClass
 
 import Prelude
 
+import Data.Typeable
 import qualified Data.Array.Convert
 import qualified Data.Array.DynamicS as OT
 import           Data.Array.Internal (valueOf)
@@ -26,7 +27,11 @@ import           Numeric.LinearAlgebra (Numeric)
 
 import HordeAd.Core.SizedIndex
 import HordeAd.Internal.TensorOps
+import GHC.Stack
 
+import Data.Proxy
+import GHC.TypeLits
+import Debug.Trace
 -- * Tensor class definition
 
 -- @IntOf r@ as size or shape gives more expressiveness,
@@ -148,17 +153,20 @@ class ( RealFloat r, RealFloat (TensorOf 0 r), RealFloat (TensorOf 1 r)
   tflatten u = treshape (flattenShape $ tshape u) u
   treshape :: (KnownNat n, KnownNat m)
            => ShapeInt m -> TensorOf n r -> TensorOf m r
-  tbuild :: forall m n. (KnownNat m, KnownNat n)
+  tbuild :: forall m n. (HasCallStack, KnownNat m, KnownNat n)
          => ShapeInt (m + n) -> (IndexOf m r -> TensorOf n r)
          -> TensorOf (m + n) r
   tbuild sh0 f0 =
-    let buildSh :: KnownNat m1
+    let ?callStack = pushCallStack (show ("TR", typeRep (Proxy @m), natVal (Proxy @m), "TR2", typeRep (Proxy @n), natVal (Proxy @n)), SrcLoc "" "" "" 0 0 0 0) callStack
+    in
+    let buildSh :: forall m1 . KnownNat m1
                 => ShapeInt m1 -> (IndexOf m1 r -> TensorOf n r)
                 -> TensorOf (m1 + n) r
         buildSh ZS f = f ZI
-        buildSh (k :$ sh) f = tbuild1 k (\i -> buildSh sh (\ix -> f (i :. ix)))
+        buildSh (k :$ sh) f =
+          let ?callStack = pushCallStack (show ("TR", typeRep (Proxy @m1), natVal (Proxy @m1)), SrcLoc "" "" "" 0 0 0 0) callStack in tbuild1 k (\i -> buildSh sh (\ix -> f (i :. ix)))
     in buildSh (takeShape @m @n sh0) f0
-  tbuild1 :: KnownNat n  -- this form requires less type applications
+  tbuild1 :: (HasCallStack, KnownNat n)  -- this form requires less type applications
           => Int -> (IntOf r -> TensorOf n r) -> TensorOf (1 + n) r
   tmap :: (KnownNat m, KnownNat n)
        => (TensorOf n r -> TensorOf n r)
@@ -168,9 +176,11 @@ class ( RealFloat r, RealFloat (TensorOf 0 r), RealFloat (TensorOf 1 r)
         => (TensorOf n r -> TensorOf n r)
         -> TensorOf (1 + n) r -> TensorOf (1 + n) r
   tmap1 f u = tbuild1 (tlength u) (\i -> f (u ! [i]))
-  tmap0N :: KnownNat n
+  tmap0N :: forall n . (HasCallStack, KnownNat n)
          => (TensorOf 0 r -> TensorOf 0 r) -> TensorOf n r -> TensorOf n r
-  tmap0N f v = tbuild (tshape v) (\ix -> f $ v ! ix)
+  tmap0N f v =
+    let ?callStack = pushCallStack (show ("TR", typeRep (Proxy @n), (natVal (Proxy @n))), SrcLoc "" "" "" 0 0 0 0) callStack
+    in traceShow (natVal (Proxy @(n))) $ tbuild (tshape v) (\ix -> f $ v ! ix)
   tzipWith :: (KnownNat m, KnownNat n)
            => (TensorOf n r -> TensorOf n r -> TensorOf n r)
            -> TensorOf (m + n) r -> TensorOf (m + n) r -> TensorOf (m + n) r

@@ -30,6 +30,10 @@ import           GHC.TypeLits (KnownNat, type (+))
 import           Numeric.LinearAlgebra (Matrix, Numeric, Vector)
 import qualified Numeric.LinearAlgebra as LA
 import qualified Numeric.LinearAlgebra.Devel
+import GHC.Stack
+import GHC.TypeLits
+import Debug.Trace
+import Data.Proxy
 
 import HordeAd.Core.SizedIndex
 import HordeAd.Internal.OrthotopeOrphanInstances (liftVR, liftVR2)
@@ -289,9 +293,11 @@ tbuildNR sh0 f0 =
   in buildSh (takeShape @m @n sh0) f0
 
 tbuild1R
-  :: (KnownNat n, Numeric r)
+  :: forall n r . (HasCallStack, KnownNat n, Numeric r)
   => Int -> (Int -> OR.Array n r) -> OR.Array (1 + n) r
-tbuild1R k f = OR.ravel $ ORB.fromList [k]
+tbuild1R k f =
+  let ?callStack = pushCallStack (show (natVal (Proxy @n)), SrcLoc "" "" "" 0 0 0 0) callStack
+  in OR.ravel $ ORB.fromList [k]
                $ map f [0 .. k - 1]  -- hope this fuses
 
 tmap0NR

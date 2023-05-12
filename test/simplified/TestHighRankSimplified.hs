@@ -10,8 +10,15 @@ import           Test.Tasty.HUnit hiding (assert)
 
 import HordeAd
 import HordeAd.Core.DualClass (inputConstant)
-
+import Data.Proxy
+import GHC.TypeLits
+import Debug.Trace
 import Tool.EqEpsilon
+import GHC.Stack
+import Data.Proxy
+import GHC.TypeLits
+import Data.Typeable
+import Data.Typeable
 
 rev' :: forall a r n m.
         ( KnownNat n, KnownNat m, HasDelta r, ADReady r
@@ -21,16 +28,18 @@ rev' :: forall a r n m.
           ~ ADVal 'ADModeGradient (OR.Array n r)
         , TensorOf m (ADVal 'ADModeGradient r)
           ~ ADVal 'ADModeGradient (OR.Array m r)
-        , ADReady (ADVal 'ADModeGradient r) )
+        , ADReady (ADVal 'ADModeGradient r), HasCallStack)
      => (forall x. ADReady x => TensorOf n x -> TensorOf m x)
      -> OR.Array n r
      -> ( TensorOf m r, a )
 rev' f vals =
-  let value0 = f vals
-      dt = inputConstant @a 1
-      g inputs = f $ parseADInputs vals inputs
-      (_, value1) = revOnDomainsFun dt g (toDomains vals)
-  in ( value0, value1 )
+ let ?callStack = pushCallStack (show ("TR_top_2", typeRep (Proxy @(n)), natVal (Proxy @(n)), typeRep (Proxy @m), natVal (Proxy @m)), SrcLoc "" "" "" 0 0 0 0) callStack
+ in
+ let value0 = traceShow ?callStack f vals
+     dt = inputConstant @a 1
+     g inputs = f $ parseADInputs vals inputs
+     (_, value1) = revOnDomainsFun dt g (toDomains vals)
+  in traceShow ?callStack ( value0, value1 )
 
 assertEqualUpToEpsilon'
     :: ( AssertEqualUpToEpsilon z b
@@ -57,20 +66,26 @@ nestedBuildMap r =
                                   (2 :$ 4 :$ 2 :$ 2 :$ 4 :$ 2 :$ 1 :$ 3 :$ 2 :$ 2 :$ 4 :$ 2 :$ 1 :$ 3 :$ 2 :$ 2 :$ 4 :$ 2 :$ 1 :$ 3 :$ 2 :$ 2 :$ 4 :$ 2 :$ 1 :$ 3 :$ 2 :$ 2 :$ 4 :$ 2 :$ 1 :$ 3 :$ 2 :$ 2 :$ 4 :$ 2 :$ 1 :$ 3 :$ 2 :$ 2 :$ 4 :$ 2 :$ 1 :$ 3 :$ 2 :$ 1 :$ 3 :$ 2 :$ 2 :$ 4 :$ 2 :$ 1 :$ 3 :$ 2 :$ 2 :$ 4 :$ 2 :$ 1 :$ 3 :$ 2 :$ 2 :$ 4 :$ 2 :$ 1 :$ 3 :$ 2 :$ 2 :$ 4 :$ 2 :$ 1 :$ 3 :$ 2 :$ 2 :$ 4 :$ 2 :$ 1 :$ 3 :$ 2 :$ 2 :$ 4 :$ 2 :$ 1 :$ 3 :$ 2 :$ 2 :$ 4 :$ 2 :$ 1 :$ 3 :$ 2 :$ 2 :$ 4 :$ 2 :$ 1 :$ 3 :$ 2 :$ 2 :$ 4 :$ 2 :$ 1 :$ 3 :$ 2 :$ 2 :$ 4 :$ 2 :$ 1 :$ 3 :$ 2 :$ 2 :$ 4 :$ 2 :$ 1 :$ 3 :$ 2 :$ ZS))
                        (tindex (tkonst 1 r) (0 :. ZI))
 
+rep1 = typeNatTypeRep @1
+
+rep2 = typeNatTypeRep @2
+
 testNestedBuildMap7 :: Assertion
-testNestedBuildMap7 =
+testNestedBuildMap7 = traceShow (rep1, rep2) $
   assertEqualUpToEpsilon 1e-8
     2176.628439128524
-    (rev @(OR.Array 33 Double) nestedBuildMap 0.6)
+    (rev @(OR.Array 32 Double) nestedBuildMap 0.6)
 
 
 
 
-concatBuild :: (ADReady r, KnownNat (1 + n), KnownNat (2 + n))
+concatBuild :: forall n r . (ADReady r, KnownNat (1 + n), KnownNat (2 + n), HasCallStack)
             => TensorOf (1 + n) r -> TensorOf (3 + n) r
-concatBuild r = tkonst 1 (tkonst 1 (tmap0N id r))
+concatBuild r =
+  let ?callStack = pushCallStack (show ("TR_top", typeRep (Proxy @(1 + n)), natVal (Proxy @(1 + n))), SrcLoc "" "" "" 0 0 0 0) callStack
+  in traceShow ?callStack (tkonst 1 (tkonst 1 (tmap0N id r)))
 
 testConcatBuild :: Assertion
-testConcatBuild =
+testConcatBuild = traceShow ("reps", rep1, rep2) $
   assertEqualUpToEpsilon' 1e-10
-    (rev' @(OR.Array 3 Double) concatBuild (tkonst 7 3.4))
+    (rev' @(OR.Array 3 Double) @Double @1 @3 concatBuild (tkonst 7 3.4))
