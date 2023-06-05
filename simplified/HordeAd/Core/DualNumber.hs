@@ -82,7 +82,7 @@ instance Ord a => OrdB (ADVal d a) where
 -- The bare constructor should not be used directly (which is not enforced
 -- by the types yet), except when deconstructing via pattern-matching.
 dD :: IsPrimal d a => a -> Dual d a -> ADVal d a
-dD a dual = D a (recordSharing dual)
+dD a dual = D a dual
 
 -- | This a not so smart constructor for 'D' of 'ADVal' that does not record
 -- sharing information. If used in contexts where sharing may occur,
@@ -126,9 +126,6 @@ instance TensorIsArray Double where
   toArray = id
   fromArray = id
 
-instance TensorIsArray Float where
-  toArray = id
-  fromArray = id
 
 -- | Is a scalar and will be used to compute gradients via delta-expressions.
 type HasDelta r = ( ADModeAndNum 'ADModeGradient r

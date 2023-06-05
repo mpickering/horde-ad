@@ -365,16 +365,6 @@ instance IsPrimal 'ADModeGradient Double where
     _ -> wrapDelta0 d
 
 -- | This is an impure instance. See above.
-instance IsPrimal 'ADModeGradient Float where
-  -- Identical as above:
-  dZero = Zero0
-  dScale = Scale0
-  dAdd = Add0
-  recordSharing d = case d of
-    Zero0 -> d
-    Input0{} -> d
-    Let0{} -> d  -- should not happen, but older/lower id is safer anyway
-    _ -> wrapDelta0 d
 
 -- | This is an impure instance. See above.
 instance IsPrimal 'ADModeGradient (Vector r) where
@@ -424,9 +414,6 @@ instance HasInputs Double where
   dInput = Input0
   packDeltaDt = DeltaDt0
 
-instance HasInputs Float where
-  dInput = Input0
-  packDeltaDt = DeltaDt0
 
 instance HasInputs (Vector r) where
   dInput = Input1
@@ -529,11 +516,6 @@ instance IsPrimal 'ADModeDerivative Double where
   dAdd d e = d + e
   recordSharing = id
 
-instance IsPrimal 'ADModeDerivative Float where
-  dZero = 0
-  dScale k d = k * d
-  dAdd d e = d + e
-  recordSharing = id
 
 -- These constraints force @UndecidableInstances@.
 instance Num (Vector r)
@@ -655,11 +637,6 @@ instance IsPrimal 'ADModeValue Double where
   dAdd _ _ = DummyDual ()
   recordSharing = id
 
-instance IsPrimal 'ADModeValue Float where
-  dZero = DummyDual ()
-  dScale _ _ = DummyDual ()
-  dAdd _ _ = DummyDual ()
-  recordSharing = id
 
 instance IsPrimal 'ADModeValue (Vector r) where
   dZero = DummyDual ()

@@ -33,6 +33,11 @@ import qualified Numeric.LinearAlgebra.Devel
 
 import HordeAd.Core.SizedIndex
 import HordeAd.Internal.OrthotopeOrphanInstances (liftVR, liftVR2)
+import GHC.TypeLits
+import Data.Proxy
+import Data.Typeable
+import Debug.Trace
+import GHC.Stack
 
 type IndexInt n = Index n Int
 
@@ -238,9 +243,11 @@ tfromVector0NR
 tfromVector0NR sh l = OR.fromVector (shapeToList sh) $ V.convert l
 
 tkonstR
-  :: (KnownNat n, Numeric r)
+  :: forall n r . (KnownNat n, Numeric r)
   => Int -> OR.Array n r -> OR.Array (1 + n) r
-tkonstR s u = OR.ravel $ ORB.constant [s] u
+tkonstR s u =
+  traceShow (typeRep (Proxy @n),  natVal (Proxy @n)) $
+  OR.ravel $ ORB.constant [s] u
 
 tkonst0NR
   :: (KnownNat n, Numeric r)

@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveAnyClass, DerivingStrategies, UndecidableInstances #-}
 {-# OPTIONS_GHC -fplugin GHC.TypeLits.KnownNat.Solver #-}
-{-# OPTIONS_GHC -fplugin GHC.TypeLits.Normalise #-}
+{-# OPTIONS_GHC -fplugin GHC.TypeLits.Normalise -fdefer-type-errors #-}
 -- | The second component of our rendition of dual numbers:
 -- delta expressions, with their semantics.
 -- Neel Krishnaswami calls them \"sparse vector expressions\",

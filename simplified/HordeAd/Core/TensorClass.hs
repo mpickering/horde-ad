@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedLists, UndecidableInstances #-}
 {-# OPTIONS_GHC -fplugin GHC.TypeLits.KnownNat.Solver #-}
-{-# OPTIONS_GHC -fplugin GHC.TypeLits.Normalise #-}
+{-# OPTIONS_GHC -fplugin GHC.TypeLits.Normalise -fno-specialise #-}
 -- | Dual numbers and various operations on them, arithmetic and related
 -- to tensors (vectors, matrices and others). This is a part of
 -- the high-level API of the horde-ad library, defined using the mid-level
@@ -8,7 +8,6 @@
 -- of the high-level API is in "HordeAd.Core.Engine".
 module HordeAd.Core.TensorClass
   ( IndexOf, ShapeInt, Tensor(..), HasPrimal(..), ADReady
-  , scale1, relu1, reluLeaky1
   ) where
 
 
@@ -26,6 +25,11 @@ import           Numeric.LinearAlgebra (Numeric)
 
 import HordeAd.Core.SizedIndex
 import HordeAd.Internal.TensorOps
+
+import Data.Proxy
+import GHC.TypeLits
+import Data.Typeable
+import Debug.Trace
 
 -- * Tensor class definition
 
@@ -306,19 +310,19 @@ instance Tensor Double where
   tshape = tshapeR
   tminIndex0 = tminIndexR
   tmaxIndex0 = tmaxIndexR
-  tfloor = floor . tunScalar
+--  tfloor = floor . tunScalar
   tindex = tindexZR
   tsum = tsumR
-  tsum0 = tscalar . tsum0R
-  tdot0 u v = tscalar $ tdot0R u v
+--  tsum0 = tscalar . tsum0R
+  --tdot0 u v = tscalar $ tdot0R u v
   tscatter = tscatterNR
   tscatter1 = tscatter1R
   tfromList = tfromListR
-  tfromList0N = tfromList0NR
+--  tfromList0N = tfromList0NR
   tfromVector = tfromVectorR
-  tfromVector0N = tfromVector0NR
+--  tfromVector0N = tfromVector0NR
   tkonst = tkonstR
-  tkonst0N sh = tkonst0NR sh . tunScalar
+  --tkonst0N sh = tkonst0NR sh . tunScalar
   tappend = tappendR
   tslice = tsliceR
   treverse = treverseR
@@ -326,46 +330,13 @@ instance Tensor Double where
   treshape = treshapeR
   tbuild = tbuildNR
   tbuild1 = tbuild1R
+  {-
   tgather = tgatherZR
   tgather1 = tgatherZ1R
   tscalar = tscalarR
   tunScalar = tunScalarR
+  -}
 
-instance Tensor Float where
-  type TensorOf n Float = OR.Array n Float
-  type IntOf Float = Int
-  tshape = tshapeR
-  tminIndex0 = tminIndexR
-  tmaxIndex0 = tmaxIndexR
-  tfloor = floor . tunScalar
-  tindex = tindexZR
-  tsum = tsumR
-  tsum0 = tscalar . tsum0R
-  tdot0 u v = tscalar $ tdot0R u v
-  tscatter = tscatterNR
-  tscatter1 = tscatter1R
-  tfromList = tfromListR
-  tfromList0N = tfromList0NR
-  tfromVector = tfromVectorR
-  tfromVector0N = tfromVector0NR
-  tkonst = tkonstR
-  tkonst0N sh = tkonst0NR sh . tunScalar
-  tappend = tappendR
-  tslice = tsliceR
-  treverse = treverseR
-  ttranspose = ttransposeR
-  treshape = treshapeR
-  tbuild = tbuildNR
-  tbuild1 = tbuild1R
-  -- TODO: low priority: implement for speed and use for ADVal, too
-  -- tmap = tmapR
-  -- tmap0N = tmap0NR
-  -- tzipWith = tzipWithR
-  -- tzipWith0N = tzipWith0NR
-  tgather = tgatherZR
-  tgather1 = tgatherZ1R
-  tscalar = tscalarR
-  tunScalar = tunScalarR
 
 {- These instances are increasingly breaking stuff, so disabled:
 
@@ -466,38 +437,3 @@ instance HasPrimal Double where
   tfromR = Data.Array.Convert.convert
   tfromD = Data.Array.Convert.convert
 
-instance HasPrimal Float where
-  type ScalarOf Float = Float
-  type Primal Float = Float
-  type DualOf n Float = ()
-  tconst = id
-  tconstant = id
-  tprimalPart = id
-  tdualPart _ = ()
-  tD u _ = u
-  type DynamicTensor Float = OT.Array Float
-  tdummyD = dummyTensor
-  tisDummyD = isTensorDummy
-  taddD = (+)
-  tfromR = Data.Array.Convert.convert
-  tfromD = Data.Array.Convert.convert
-
-
--- * Odds and ends
-
-scale1 :: (ADReady r, KnownNat n, Num (TensorOf n r))
-       => TensorOf n (Primal r) -> TensorOf n r -> TensorOf n r
-scale1 a d = tconstant a * d
-
-relu1, reluLeaky1
-  :: forall n r. (ADReady r, KnownNat n, Num (TensorOf n r))
-  => TensorOf n r -> TensorOf n r
-relu1 v =
-  let oneIfGtZero = tmap0N (\x -> ifB (x >* 0) 1 0)
-                           (tprimalPart v)
-  in scale1 oneIfGtZero v
-
-reluLeaky1 v =
-  let oneIfGtZero = tmap0N (\x -> ifB (x >* 0) 1 0.01)
-                           (tprimalPart v)
-  in scale1 oneIfGtZero v

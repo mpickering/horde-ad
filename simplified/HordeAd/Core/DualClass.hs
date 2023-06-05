@@ -306,16 +306,6 @@ instance IsPrimalR 'ADModeGradient Double where
     Let1{} -> d  -- should not happen, but older/lower id is safer anyway
     _ -> wrapDelta1 d
 
-instance IsPrimalR 'ADModeGradient Float where
-  dZeroR = Zero1
-  dScaleR = Scale1
-  dAddR = Add1
-  recordSharingR d = case d of
-    Zero1 -> d
-    Input1{} -> d
-    FromX1{} -> d
-    Let1{} -> d  -- should not happen, but older/lower id is safer anyway
-    _ -> wrapDelta1 d
 
 instance HasInputs Double where
   packDeltaDt t _tsh = DeltaDt0 t
@@ -370,38 +360,6 @@ instance HasRanks 'ADModeGradient Double where
 
   dFrom1X = From1X
 
-instance HasRanks 'ADModeGradient Float where
-  dInput0 = Input0
-  dIndex0 = Index0
-  dSum0 = Sum0
-  dDot0 = Dot0
-  dUnScalar0 = UnScalar0
-
-  dInput1 = Input1
---  dIndex1 = Index1
-  dIndexN = IndexN
-  dSum1 = Sum1
-  dScalar1 = Scalar1
-  dFromList1 = FromList1
-  dFromVector1 = FromVector1
---  dFromList01 = FromList01
---  dFromVector01 = FromVector01
-  dKonst1 = Konst1
---  dKonst01 = Konst01
-  dAppend1 = Append1
-  dSlice1 = Slice1
-  dReverse1 = Reverse1
-  dTranspose1 = Transpose1
-  dReshape1 = Reshape1
-  dBuild1 = Build1
---  dGather1 = Gather1
-  dGatherN = GatherN
---  dScatter1 = Scatter1
-  dScatterN = ScatterN
-
-  dFromX1 = FromX1
-
-  dFrom1X = From1X
 
 -- * Alternative instance: forward derivatives computed on the spot
 
@@ -446,39 +404,6 @@ instance HasRanks 'ADModeDerivative Double where
 
   dInput1 = undefined
 --  dIndex1 d ix _ = tindexZ1R d ix
-  dIndexN d ixs _ = tindexZR d ixs
-  dSum1 _ = tsumR
-  dScalar1 = OR.scalar
-  dFromList1 = tfromListR
-  dFromVector1 = tfromVectorR
---  dFromList01 = tfromList0NR
---  dFromVector01 = tfromVector0NR
-  dKonst1 = tkonstR
---  dKonst01 = tkonst0NR
-  dAppend1 d _k = tappendR d
-  dSlice1 i n d _len = tsliceR i n d
-  dReverse1 = treverseR
-  dTranspose1 = ttransposeR
-  dReshape1 _sh = treshapeR
-  dBuild1 = tbuild1R
---  dGather1 f _sh u k = tgatherZ1R k u f
-  dGatherN sh d f _shd = tgatherZR sh d f
---  dScatter1 f _n = tscatter1R f
-  dScatterN sh d f _shd = tscatterNR sh d f
-
-  dFromX1 = tfromD
-
-  dFrom1X = tfromR
-
-instance HasRanks 'ADModeDerivative Float where
-  dInput0 = undefined
-  dIndex0 d ixs _ = tindex0R d ixs
-  dSum0 _ = tsum0R
-  dDot0 = tdot0R
-  dUnScalar0 = OR.unScalar
-
-  dInput1 = undefined
---  dIndex1 d ix _ = tindex1R d ix
   dIndexN d ixs _ = tindexZR d ixs
   dSum1 _ = tsumR
   dScalar1 = OR.scalar
