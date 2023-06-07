@@ -16,7 +16,7 @@ module HordeAd
 
 import Prelude ()
 
-import HordeAd.Core.ADValTensor
+import HordeAd.Core.ADValTensor hiding (build1)
 import HordeAd.Core.Ast
 import HordeAd.Core.DualNumber
 import HordeAd.Core.Engine

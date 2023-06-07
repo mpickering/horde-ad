@@ -1,6 +1,6 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -fplugin GHC.TypeLits.KnownNat.Solver #-}
-{-# OPTIONS_GHC -fplugin GHC.TypeLits.Normalise #-}
+{-# OPTIONS_GHC -fplugin GHC.TypeLits.Normalise -fdefer-type-errors #-}
 -- | Dual numbers and various operations on them, arithmetic and related
 -- to tensors (vectors, matrices and others). This is a part of
 -- the high-level API of the horde-ad library, defined using the mid-level
@@ -20,7 +20,7 @@ module HordeAd.Core.DualNumber
   , softMax, lossCrossEntropy, lossCrossEntropyV, lossSoftMaxCrossEntropyV
   , fromList1, fromVector1, konst1, append1, slice1, reverse1, maxPool1
   , softMaxV, build1POPL, build1Elementwise, build1Closure, build1
-  , map1POPL, map1Elementwise
+  , map1POPL
   , -- * Re-exports
     ADMode(..)
   , IsPrimal (..), IsPrimalAndHasFeatures, IsPrimalAndHasInputs
@@ -498,11 +498,11 @@ map1POPL :: (ADVal d r -> ADVal d r) -> Data.Vector.Vector (ADVal d r)
          -> Data.Vector.Vector (ADVal d r)
 map1POPL = V.map
 
-map1Elementwise
-  :: ADModeAndNum d r
-  => (ADVal d r -> ADVal d r) -> ADVal d (Vec r) -> ADVal d (Vec r)
-map1Elementwise f d@(D u _) =
-  build1Elementwise (tsizeR u) $ \i -> f (index10 d i)
+--map1Elementwise
+--  :: ADModeAndNum d r
+--  => (ADVal d r -> ADVal d r) -> ADVal d (Vec r) -> ADVal d (Vec r)
+--map1Elementwise f d@(D u _) =
+--  build1Elementwise (tsizeR u) $ \i -> f (index10 d i)
     -- equivalent to
     -- @fromVector1 . map1POPL f . rank1toVector
     --   where rank1toVector d@(D v _v') = V.generate (llength d) (lindex0 d)@

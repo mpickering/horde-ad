@@ -2,7 +2,7 @@
 {-# OPTIONS_GHC -freduction-depth=10000 #-}
 {-# OPTIONS_GHC -fplugin GHC.TypeLits.KnownNat.Solver #-}
 {-# OPTIONS_GHC -fplugin GHC.TypeLits.Normalise #-}
-{-# OPTIONS_GHC -Wno-orphans #-}
+{-# OPTIONS_GHC -Wno-orphans -fdefer-type-errors #-}
 -- | Vectorization of the build operation in Ast.
 module HordeAd.Core.AstVectorize
   ( traceRuleEnabledRef
@@ -34,15 +34,15 @@ instance ( Numeric r, RealFloat r, RealFloat (Vector r)
   type IntOf (Ast 0 r) = AstInt r
 
   tshape = shapeAst
-  tminIndex0 = AstMinIndex1
+--  tminIndex0 = AstMinIndex1
   tmaxIndex0 = AstMaxIndex1
-  tfloor = AstIntFloor
+--  tfloor = AstIntFloor
 
   tindex = AstIndexZ
-  tsum = AstSum
-  tfromIndex0 = AstConstant . AstPrimalPart . AstConstInt
+--  tsum = AstSum
+--  tfromIndex0 = AstConstant . AstPrimalPart . AstConstInt
     -- toInteger is not defined for Ast, hence a special implementation
-  tscatter sh t f = AstScatter sh t (funToAstIndex f)  -- introduces new vars
+--  tscatter sh t f = AstScatter sh t (funToAstIndex f)  -- introduces new vars
 
   tfromList = AstFromList
   tfromList0N sh = AstReshape sh . AstFromList
@@ -55,10 +55,10 @@ instance ( Numeric r, RealFloat r, RealFloat (Vector r)
   ttranspose = AstTranspose
   treshape = AstReshape
   tbuild1 = astBuild1
-  tgather sh t f = AstGatherZ sh t (funToAstIndex f)  -- introduces new vars
+--  tgather sh t f = AstGatherZ sh t (funToAstIndex f)  -- introduces new vars
 
   tscalar = id  -- Ast confuses the two ranks
-  tunScalar = id
+--  tunScalar = id
 
 -- This is a vectorizing combinator that also simplifies
 -- the terms touched during vectorization, but not any others.
@@ -77,16 +77,16 @@ instance ( Numeric r, RealFloat r, RealFloat (Vector r)
   type IntOf (AstPrimalPart 0 r) = AstInt r
 
   tshape = shapeAst . unAstPrimalPart
-  tminIndex0 = AstMinIndex1 . unAstPrimalPart
+--  tminIndex0 = AstMinIndex1 . unAstPrimalPart
   tmaxIndex0 = AstMaxIndex1 . unAstPrimalPart
-  tfloor = AstIntFloor . unAstPrimalPart
+--  tfloor = AstIntFloor . unAstPrimalPart
 
   tindex v ix = AstPrimalPart $ AstIndexZ (unAstPrimalPart v) ix
-  tsum = AstPrimalPart . AstSum . unAstPrimalPart
-  tfromIndex0 = AstPrimalPart . AstConstInt
+--  tsum = AstPrimalPart . AstSum . unAstPrimalPart
+--  tfromIndex0 = AstPrimalPart . AstConstInt
     -- toInteger is not defined for Ast, hence a special implementation
-  tscatter sh t f = AstPrimalPart $ AstScatter sh (unAstPrimalPart t)
-                    $ funToAstIndex f  -- this introduces new variable names
+--  tscatter sh t f = AstPrimalPart $ AstScatter sh (unAstPrimalPart t)
+--                    $ funToAstIndex f  -- this introduces new variable names
 
   tfromList = AstPrimalPart . AstFromList . map unAstPrimalPart
   tfromList0N sh =
@@ -106,11 +106,11 @@ instance ( Numeric r, RealFloat r, RealFloat (Vector r)
                 $ unAstPrimalPart . f
                 -- TODO: $ AstConstant . f
                 -- that's the correct one, but unvectorized tests fail with it
-  tgather sh t f = AstPrimalPart $ AstGatherZ sh (unAstPrimalPart t)
-                   $ funToAstIndex f  -- this introduces new variable names
+--  tgather sh t f = AstPrimalPart $ AstGatherZ sh (unAstPrimalPart t)
+--                   $ funToAstIndex f  -- this introduces new variable names
 
   tscalar = id
-  tunScalar = id
+--  tunScalar = id
 
 instance HasPrimal (Ast 0 r) where
   type ScalarOf (Ast 0 r) = r

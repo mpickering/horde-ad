@@ -396,37 +396,6 @@ instance IsPrimalR 'ADModeDerivative Float where
   recordSharingR = id
 
 instance HasRanks 'ADModeDerivative Double where
-  dInput0 = undefined
-  dIndex0 d ixs _ = tindex0R d ixs
-  dSum0 _ = tsum0R
-  dDot0 = tdot0R
-  dUnScalar0 = OR.unScalar
-
-  dInput1 = undefined
---  dIndex1 d ix _ = tindexZ1R d ix
-  dIndexN d ixs _ = tindexZR d ixs
-  dSum1 _ = tsumR
-  dScalar1 = OR.scalar
-  dFromList1 = tfromListR
-  dFromVector1 = tfromVectorR
---  dFromList01 = tfromList0NR
---  dFromVector01 = tfromVector0NR
-  dKonst1 = tkonstR
---  dKonst01 = tkonst0NR
-  dAppend1 d _k = tappendR d
-  dSlice1 i n d _len = tsliceR i n d
-  dReverse1 = treverseR
-  dTranspose1 = ttransposeR
-  dReshape1 _sh = treshapeR
-  dBuild1 = tbuild1R
---  dGather1 f _sh u k = tgatherZ1R k u f
-  dGatherN sh d f _shd = tgatherZR sh d f
---  dScatter1 f _n = tscatter1R f
-  dScatterN sh d f _shd = tscatterNR sh d f
-
-  dFromX1 = tfromD
-
-  dFrom1X = tfromR
 
 -- * Another alternative instance: only the objective function's value computed
 

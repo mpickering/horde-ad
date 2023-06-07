@@ -22,7 +22,8 @@ import           Numeric.LinearAlgebra.Devel
 
 import HordeAd.Internal.Delta (Domains (..))
 import HordeAd.Internal.OrthotopeOrphanInstances (liftVT2)
-import HordeAd.Internal.TensorOps (isTensorDummy)
+
+isTensorDummy = undefined
 
 updateWithGradient :: (Numeric r, Floating (Vector r))
                    => r -> Domains r -> Domains r -> Domains r

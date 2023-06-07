@@ -215,9 +215,9 @@ instance (KnownNat n, DynamicTensor r ~ OT.Array r)
   type Scalar (OR.Array n r) = r
   toDomains a =
     Domains V.empty (V.singleton (Data.Array.Convert.convert a))
-  fromDomains aInit (Domains v0 v1) = case V.uncons v1 of
-    Just (a, rest) -> (toRankedOrDummy (OR.shapeL aInit) a, Domains v0 rest)
-    Nothing -> error "fromDomains in AdaptableDomains (OR.Array n r)"
+--  fromDomains aInit (Domains v0 v1) = case V.uncons v1 of
+--    Just (a, rest) -> (toRankedOrDummy (OR.shapeL aInit) a, Domains v0 rest)
+--    Nothing -> error "fromDomains in AdaptableDomains (OR.Array n r)"
   nParams _ = 1
   nScalars = OR.size
 
