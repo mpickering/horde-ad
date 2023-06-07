@@ -9,7 +9,6 @@ import           Test.Tasty.Options
 import           Test.Tasty.Runners
 
 import qualified TestHighRankSimplified
-import           Tool.EqEpsilon
 
 main :: IO ()
 main = do
@@ -17,7 +16,6 @@ main = do
   SIO.hSetBuffering SIO.stdout SIO.LineBuffering
   SIO.hSetBuffering SIO.stderr SIO.LineBuffering
   opts <- parseOptions (ingredients : defaultIngredients) tests
-  setEpsilonEq (lookupOption opts :: EqEpsilon)
   defaultMainWithIngredients (ingredients : defaultIngredients) tests
   where
     ingredients = includingOptions [Option (Proxy :: Proxy EqEpsilon)]

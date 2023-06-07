@@ -198,17 +198,28 @@ test-suite simplifiedOnlyTest
 
     hs-source-dirs:   test
                       test/simplified
+                      simplified src/common
 
     main-is:          SimplifiedOnlyTest.hs
 
     other-modules:    TestHighRankSimplified
 
     build-depends:
-      , horde-ad-simplified
-      , testCommonLibrarySimplified
-
+      assert-failure
+      , base >= 4.14 && < 99
+      , Boolean
+      , deepseq
+      , enummapset
+      , ghc-typelits-knownnat
+      , ghc-typelits-natnormalise
+      , hmatrix
+      , ilist
+      , mono-traversable
+      , orthotope
+      , strict-containers
+      , unboxed-ref
+      , vector
       , base
       , ghc-typelits-natnormalise
       , orthotope
       , tasty >= 1.0
-      , tasty-hunit

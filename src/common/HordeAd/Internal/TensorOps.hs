@@ -41,7 +41,6 @@ import GHC.Stack
 
 type IndexInt n = Index n Int
 
-
 tbuild1R
   :: (KnownNat n, Numeric r)
   => Int -> (Int -> OR.Array n r) -> OR.Array (1 + n) r

@@ -4,19 +4,18 @@ module TestHighRankSimplified where
 
 import Prelude
 
-import qualified Data.Array.RankedS as OR
 import           GHC.TypeLits (KnownNat, type (+), type (-), type (<=))
-import           Test.Tasty
-import           Test.Tasty.HUnit hiding (assert)
 
-import HordeAd
 import HordeAd.Core.DualClass (inputConstant)
 
-import Tool.EqEpsilon
 import Debug.Trace
 import GHC.TypeLits
 import Data.Typeable
 import Data.Proxy
+import HordeAd.Core.ADValTensor
+import HordeAd.Core.DualClass
+import HordeAd.Core.DualNumber
+import HordeAd.Core.TensorClass
 
 spec1 ::  forall m n. (KnownNat m, KnownNat n)
          => ShapeInt (m + n) -> (IndexOf m (ADVal ADModeGradient Double) -> TensorOf n (ADVal ADModeGradient Double))

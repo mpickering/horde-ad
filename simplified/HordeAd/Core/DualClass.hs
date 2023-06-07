@@ -26,15 +26,7 @@
 -- sharing. This applies regardless of impurity, because repeated processing
 -- of the same shared terms is prohibitive expensive.
 module HordeAd.Core.DualClass
-  ( -- * The most often used part of the mid-level API that gets re-exported in high-level API
-    ADMode(..)
-  , -- * The less often used part of the mid-level API that gets re-exported in high-level API; it leaks implementation details
-    IsPrimal(..), IsPrimalR(..), IsPrimalAndHasFeatures, IsPrimalAndHasInputs
-  , -- * The API elements used for implementing high-level API, but not re-exported in high-level API
-    Dual, HasRanks(..), HasInputs(..), dummyDual
-  , -- * Internal operations, exposed for tests, debugging and experiments
-    unsafeGetFreshId
-  ) where
+   where
 
 import Prelude
 
@@ -231,40 +223,6 @@ class HasRanks (d :: ADMode) r where
   dFrom1X :: KnownNat n
           => Dual d (TensorOf n r) -> Dual d (DynamicTensor r)
 
--- * Backprop gradient method instances
-
--- | This, just as many other @ADModeGradient@ instances, is an impure
--- instance, because 'recordSharing' adorns terms with an @Int@ identifier
--- from a counter that is afterwards incremented (and never changed
--- in any other way).
---
--- The identifiers are not part of any non-internal module API
--- and the impure counter that gets incremented is not exposed
--- (except for low level tests). The identifiers are read only in internal
--- modules. They are assigned here once and ever accessed read-only.
--- Their uniqueness ensures that subterms that are shared in memory
--- are evaluated only once. If pointer equality worked efficiently
--- (e.g., if compact regions with sharing were cheaper), we wouldn't need
--- the impurity.
---
--- Given that we have to use impurity anyway, we make the implementation
--- faster by ensuring the order of identifiers reflects data dependency,
--- that is, parent nodes always have higher identifier than child nodes.
--- The @StrictData@ extension ensures that the implementation of the instances
--- are call by value, which is needed for that identifier ordering.
---
--- As long as "HordeAd.Core.Delta" is used exclusively through
--- smart constructors from this API, the impurity is completely safe.
--- Even compiler optimizations, e.g., cse and full-laziness,
--- can't break the required invariants. On the contrary,
--- they increase sharing and make evaluation yet cheaper.
--- Of course, if the compiler, e.g., stops honouring @NOINLINE@,
--- all this breaks down.
---
--- The pattern-matching in 'recordSharing' is a crucial optimization
--- and it could, presumably, be extended to further limit which
--- terms get an identifier. Alternatively, 'HordeAd.Core.DualNumber.dD'
--- or library definitions that use it could be made smarter.
 instance IsPrimal 'ADModeGradient Double where
   dZero = Zero0
   dScale = Scale0
@@ -275,17 +233,6 @@ instance IsPrimal 'ADModeGradient Double where
     Let0{} -> d  -- should not happen, but older/lower id is safer anyway
     _ -> wrapDelta0 d
 
--- | This is an impure instance. See above.
-instance IsPrimal 'ADModeGradient Float where
-  -- Identical as above:
-  dZero = Zero0
-  dScale = Scale0
-  dAdd = Add0
-  recordSharing d = case d of
-    Zero0 -> d
-    Input0{} -> d
-    Let0{} -> d  -- should not happen, but older/lower id is safer anyway
-    _ -> wrapDelta0 d
 
 -- | This is a trivial and so a pure instance.
 instance IsPrimal 'ADModeGradient (OT.Array r) where
@@ -308,10 +255,6 @@ instance IsPrimalR 'ADModeGradient Double where
 
 
 instance HasInputs Double where
-  packDeltaDt t _tsh = DeltaDt0 t
-  inputConstant r _tsh = r
-
-instance HasInputs Float where
   packDeltaDt t _tsh = DeltaDt0 t
   inputConstant r _tsh = r
 
@@ -369,12 +312,6 @@ instance IsPrimal 'ADModeDerivative Double where
   dAdd d e = d + e
   recordSharing = id
 
-instance IsPrimal 'ADModeDerivative Float where
-  dZero = 0
-  dScale k d = k * d
-  dAdd d e = d + e
-  recordSharing = id
-
 instance Num (OT.Array r)
          => IsPrimal 'ADModeDerivative (OT.Array r) where
   dZero = 0
@@ -388,24 +325,12 @@ instance IsPrimalR 'ADModeDerivative Double where
   dAddR d e = d + e
   recordSharingR = id
 
--- Completely copied from above.
-instance IsPrimalR 'ADModeDerivative Float where
-  dZeroR = 0
-  dScaleR k d = k * d
-  dAddR d e = d + e
-  recordSharingR = id
 
 instance HasRanks 'ADModeDerivative Double where
 
 -- * Another alternative instance: only the objective function's value computed
 
 instance IsPrimal 'ADModeValue Double where
-  dZero = DummyDual ()
-  dScale _ _ = DummyDual ()
-  dAdd _ _ = DummyDual ()
-  recordSharing = id
-
-instance IsPrimal 'ADModeValue Float where
   dZero = DummyDual ()
   dScale _ _ = DummyDual ()
   dAdd _ _ = DummyDual ()
